@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>说客英语 - AI口语练习</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+    
+    /* 背景色 */
+    body { 
+        display: flex; justify-content: center; align-items: center; 
+        background-color: #E5E7EB; min-height: 100vh; 
+    }
+    
+    /* 手机外壳 */
+    .phone {
+        width: 390px; height: 844px; background-color: #F8FAFC;
+        border-radius: 48px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 12px #111827;
+        position: relative; overflow: hidden; display: flex; flex-direction: column;
+    }
+    
+    /* 针对手机屏幕的适配：在手机上打开时，去掉外壳，全屏显示 */
+    @media (max-width: 500px) {
+        body { background-color: #F8FAFC; }
+        .phone { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+        .island { display: none; }
+        .bottom-nav { border-radius: 0; }
+    }
+
+    .island { width: 120px; height: 32px; background: #000; border-radius: 20px; margin: 12px auto 0 auto; z-index: 100; }
+    
+    .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 100px; }
+    .scroll-content::-webkit-scrollbar { display: none; }
+
+    .header { padding: 20px 24px 10px; display: flex; justify-content: space-between; align-items: center; }
+    .greeting { font-size: 24px; font-weight: 800; color: #1E293B; margin-bottom: 4px; }
+    .sub-greeting { font-size: 13px; color: #64748B; font-weight: 500; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: #E2E8F0; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; border: 2px solid #FFF; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
+
+    .stats-row { display: flex; gap: 10px; padding: 10px 24px; }
+    .stat-card { flex: 1; background: #FFF; border-radius: 16px; padding: 12px; text-align: center; border: 1px solid #F1F5F9; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .stat-title { font-size: 11px; color: #94A3B8; margin-bottom: 4px; font-weight: 600; }
+    .stat-val { font-size: 18px; font-weight: 800; color: #1E293B; }
+    .stat-unit { font-size: 10px; color: #94A3B8; font-weight: 500; }
+
+    .tabs { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+    .tab { padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; color: #64748B; cursor: pointer; transition: 0.3s; }
+    .tab.active { background: #FFF; color: #10B981; border: 1px solid #D1FAE5; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15); }
+
+    .card-container { padding: 0 24px; }
+    .level-card { border-radius: 20px; padding: 18px; margin-bottom: 16px; position: relative; cursor: pointer; transition: transform 0.2s; border: 1px solid transparent; }
+    .level-card:active { transform: scale(0.98); }
+    
+    .card-l1 { background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border-color: #BBF7D0; }
+    .card-l2 { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-color: #BFDBFE; }
+    .card-l3 { background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); border-color: #E2E8F0; opacity: 0.7; }
+    .card-l4 { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A; opacity: 0.7; }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .level-badge { font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 8px; display: inline-block; margin-bottom: 8px; color: #FFF; }
+    .bg-green { background: #10B981; } .bg-blue { background: #3B82F6; } .bg-grey { background: #94A3B8; } .bg-yellow { background: #F59E0B; }
+    
+    .card-title { font-size: 18px; font-weight: 800; color: #1E293B; margin-bottom: 4px; }
+    .card-desc { font-size: 12px; color: #64748B; font-weight: 500; }
+    
+    .status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; }
+    .st-done { background: #D1FAE5; color: #059669; }
+    .st-doing { background: #DBEAFE; color: #2563EB; }
+    .st-todo { background: #F1F5F9; color: #64748B; }
+
+    .card-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; font-size: 12px; color: #64748B; }
+    .tags { display: flex; gap: 8px; }
+    .progress-bg { height: 6px; background: rgba(255,255,255,0.6); border-radius: 3px; flex: 1; margin: 0 12px; overflow: hidden;}
+    .progress-fill { height: 100%; border-radius: 3px; }
+    .fill-l1 { background: #10B981; width: 85%; }
+    .fill-l2 { background: #3B82F6; width: 60%; }
+    .stars { color: #FBBF24; letter-spacing: 2px; font-size: 14px;}
+
+    .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; background: #FFF; border-top: 1px solid #F1F5F9; border-radius: 0 0 48px 48px; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #94A3B8; font-size: 10px; font-weight: 600; cursor: pointer; }
+    .nav-item.active { color: #10B981; }
+    .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    
+    .fab-mic { width: 64px; height: 64px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #FFF; font-size: 28px; position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); border: 4px solid #FFF; cursor: pointer; z-index: 101; transition: 0.3s; }
+    .fab-mic:active { transform: translateX(-50%) scale(0.9); }
+
+    .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.9); color: #FFF; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; text-align: center; width: 70%; }
+    .toast.show { opacity: 1; }
+
+    .recording-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 150; color: #FFF; }
+    .recording-modal.show { opacity: 1; pointer-events: auto; }
+    .pulse { width: 100px; height: 100px; background: #10B981; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; animation: pulse 1.5s infinite; margin-bottom: 20px; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="island"></div>
+    <div class="scroll-content">
+        <div class="header">
+            <div>
+                <div class="greeting">下午好</div>
+                <div class="sub-greeting">今天也要勇敢开口哦！</div>
+            </div>
+            <div class="avatar" onclick="showToast('👦 进入个人中心')">👦</div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-title">今日练习</div><div class="stat-val">15 <span class="stat-unit">分钟</span></div></div>
+            <div class="stat-card"><div class="stat-title">词汇量</div><div class="stat-val">1280 <span class="stat-unit">个</span></div></div>
+            <div class="stat-card"><div class="stat-title">口语评分</div><div class="stat-val">B1 <span class="stat-unit">中阶</span></div></div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active">AI 口语练习</div>
+            <div class="tab" onclick="showToast('切换到今日任务')">今日任务</div>
+        </div>
+
+        <div class="card-container">
+            <div class="level-card card-l1" onclick="showToast('🎉 进入 L1 单词跟读练习')">
+                <div class="card-top">
+                    <div><div class="level-badge bg-green">L1</div><div class="card-title">单词跟读</div><div class="card-desc">通过高频跟读，建立发音自信</div></div>
+                    <div class="status st-done">已完成</div>
+                </div>
+                <div class="card-bottom">
+                    <div class="tags"><span>🎤 跟读</span><span>🔁 模仿</span></div>
+                    <div class="progress-bg"><div class="progress-fill fill-l1"></div></div>
+                    <div style="font-weight:bold; color:#10B981;">85%</div>
+                </div>
+            </div>
+
+            <div class="level-card card-l2" onclick="showToast('🚀 继续 L2 短语表达练习')">
+                <div class="card-top">
+                    <div><div class="level-badge bg-blue">L2</div><div class="card-title">短语表达</div><div class="card-desc">用完整句子表达想法</div></div>
+                    <div class="status st-doing">进行中</div>
+                </div>
+                <div class="card-bottom">
+                    <div class="tags"><span>💬 问答</span><span>🎯 表达</span></div>
+                    <div class="progress-bg"><div class="progress-fill fill-l2"></div></div>
+                    <div style="font-weight:bold; color:#3B82F6;">60%</div>
+                </div>
+            </div>
+
+            <div class="level-card card-l3" onclick="showToast('🔒 L3 暂未解锁，请先完成 L2')">
+                <div class="card-top">
+                    <div><div class="level-badge bg-grey">L3</div><div class="card-title">情景对话</div><div class="card-desc">在真实场景中流畅交流</div></div>
+                    <div class="status st-todo">未开始</div>
+                </div>
+                <div class="card-bottom" style="opacity: 0.5;">
+                    <div class="tags"><span>🎭 角色扮演</span><span>📻 原声</span></div>
+                    <div class="stars">☆☆☆☆☆</div>
+                </div>
+            </div>
+
+            <div class="level-card card-l4" onclick="showToast('🔒 L4 暂未解锁')">
+                <div class="card-top">
+                    <div><div class="level-badge bg-yellow">L4</div><div class="card-title">自由演讲</div><div class="card-desc">用英语表达你的观点</div></div>
+                    <div class="status st-todo">未开始</div>
+                </div>
+                <div class="card-bottom" style="opacity: 0.5;">
+                    <div class="tags"><span>💡 观点</span><span>📝 逻辑</span></div>
+                    <div class="stars">☆☆☆☆☆</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">🏠</div>首页</div>
+        <div class="nav-item" onclick="showToast('进入对话列表')"><div class="nav-icon">💬</div>对话</div>
+        <div style="width: 60px;"></div>
+        <div class="nav-item" onclick="showToast('查看学习数据')"><div class="nav-icon">📊</div>学习</div>
+        <div class="nav-item" onclick="showToast('进入个人中心')"><div class="nav-icon">👤</div>我的</div>
+    </div>
+
+    <div class="fab-mic" onclick="startRecording()">🎤</div>
+    <div class="toast" id="toast">提示文本</div>
+
+    <div class="recording-modal" id="recordingModal">
+        <div class="pulse">🎤</div>
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">正在聆听发音...</div>
+        <div style="font-size: 14px; color: #94A3B8;">请大声朗读："I want to order a coffee."</div>
+    </div>
+</div>
+
+<script>
+    let toastTimeout;
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
+    }
+    function startRecording() {
+        const modal = document.getElementById('recordingModal');
+        modal.classList.add('show');
+        setTimeout(() => {
+            modal.classList.remove('show');
+            showToast('🌟 AI 评分：92分！发音非常饱满，继续保持！');
+        }, 2500);
+    }
+</script>
+</body>
+</html>
